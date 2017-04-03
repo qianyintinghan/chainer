@@ -782,8 +782,7 @@ class TestUninitializedVariable(unittest.TestCase):
         x.update_rule = update_rule
         x.update()
         self.assertEqual(update_rule.update.call_count, 1)
-        args = update_rule.update.call_args_list[0][0]
-        self.assertIs(args[0], x)
+        self.assertEqual(update_rule.update.call_args_list[0], [(x,), {}])
 
     def test_update_rule_without_grad(self):
         update_rule = mock.MagicMock()

@@ -111,6 +111,7 @@ class OptimizerTestBase(object):
             optimizer = self.model.optimizer
             model.to_gpu(1)
             optimizer.setup(model)
+        # Initialize the optimizer state by running an update
         for param in optimizer.target.params(False):
             param.zerograd()
             param.update()
