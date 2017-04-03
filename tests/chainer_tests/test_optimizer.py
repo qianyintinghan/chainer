@@ -423,10 +423,8 @@ class TestGradientMethod(unittest.TestCase):
         self.optimizer.setup(self.target)
 
         self.assertEqual(create_update_rule.call_count, 2)
-        self.assertEqual(create_update_rule.call_args_list[0][0], ())
-        self.assertEqual(create_update_rule.call_args_list[0][1], {})
-        self.assertEqual(create_update_rule.call_args_list[1][0], ())
-        self.assertEqual(create_update_rule.call_args_list[1][1], {})
+        self.assertEqual(create_update_rule.call_args_list[0], [(), {}])
+        self.assertEqual(create_update_rule.call_args_list[1], [(), {}])
 
     def check_update(self):
         self.assertEqual(self.optimizer.t, 0)
