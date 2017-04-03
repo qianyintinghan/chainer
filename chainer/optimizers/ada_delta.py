@@ -38,6 +38,8 @@ class AdaDeltaRule(optimizer.UpdateRule):
 
     def update_core_cpu(self, param):
         grad = param.grad
+        if grad is None:
+            return
         msg, msdx = self.state['msg'], self.state['msdx']
         rho = self.hyperparam.rho
         eps = self.hyperparam.eps
@@ -50,6 +52,9 @@ class AdaDeltaRule(optimizer.UpdateRule):
         param.data -= dx
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T one_minus_rho, T eps',
             'T param, T msg, T msdx',
@@ -57,7 +62,7 @@ class AdaDeltaRule(optimizer.UpdateRule):
                T dx  = sqrt((msdx + eps) / (msg + eps)) * grad;
                msdx  += one_minus_rho * (dx * dx - msdx);
                param -= dx;''',
-            'adadelta')(param.grad, 1 - self.hyperparam.rho,
+            'adadelta')(grad, 1 - self.hyperparam.rho,
                         self.hyperparam.eps, param.data,
                         self.state['msg'], self.state['msdx'])
 

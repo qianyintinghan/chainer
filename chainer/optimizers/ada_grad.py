@@ -35,22 +35,27 @@ class AdaGradRule(optimizer.UpdateRule):
             self.state['h'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
+
         lr = self.hyperparam.lr
         eps = self.hyperparam.eps
-
         h = self.state['h']
-        grad = param.grad
 
         h += grad * grad
         param.data -= lr * grad / (numpy.sqrt(h) + eps)
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T lr, T eps',
             'T param, T h',
             '''h += grad * grad;
                param -= lr * grad / (sqrt(h) + eps);''',
-            'adagrad')(param.grad, self.hyperparam.lr, self.hyperparam.eps,
+            'adagrad')(grad, self.hyperparam.lr, self.hyperparam.eps,
                        param.data, self.state['h'])
 
 

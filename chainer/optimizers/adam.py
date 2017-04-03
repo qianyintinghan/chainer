@@ -46,22 +46,27 @@ class AdamRule(optimizer.UpdateRule):
             self.state['v'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         hp = self.hyperparam
         m, v = self.state['m'], self.state['v']
-        grad = param.grad
 
         m += (1 - hp.beta1) * (grad - m)
         v += (1 - hp.beta2) * (grad * grad - v)
         param.data -= self.lr * m / (numpy.sqrt(v) + hp.eps)
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T lr, T one_minus_beta1, T one_minus_beta2, T eps',
             'T param, T m, T v',
             '''m += one_minus_beta1 * (grad - m);
                v += one_minus_beta2 * (grad * grad - v);
                param -= lr * m / (sqrt(v) + eps);''',
-            'adam')(param.grad, self.lr, 1 - self.hyperparam.beta1,
+            'adam')(grad, self.lr, 1 - self.hyperparam.beta1,
                     1 - self.hyperparam.beta2, self.hyperparam.eps, param.data,
                     self.state['m'], self.state['v'])
 

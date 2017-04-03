@@ -647,15 +647,13 @@ class WeightDecay(object):
         self.rate = rate
 
     def __call__(self, rule, param):
-        if cuda.available:
-            kernel = cuda.elementwise(
-                'T p, T decay', 'T g', 'g += decay * p', 'weight_decay')
-
         p, g = param.data, param.grad
         with cuda.get_device(p) as dev:
             if int(dev) == -1:
                 g += self.rate * p
             else:
+                kernel = cuda.elementwise(
+                    'T p, T decay', 'T g', 'g += decay * p', 'weight_decay')
                 kernel(p, self.rate, g)
 
 
@@ -679,17 +677,15 @@ class Lasso(object):
         self.rate = rate
 
     def __call__(self, rule, param):
-        if cuda.available:
-            kernel = cuda.elementwise(
-                'T s, T decay', 'T g', 'g += decay * s', 'lasso')
-
         p, g = param.data, param.grad
         xp = cuda.get_array_module(p)
-        sign = xp.sign(p)
         with cuda.get_device(p) as dev:
+            sign = xp.sign(p)
             if int(dev) == -1:
                 g += self.rate * sign
             else:
+                kernel = cuda.elementwise(
+                    'T s, T decay', 'T g', 'g += decay * s', 'lasso')
                 kernel(sign, self.rate, g)
 
 
@@ -758,10 +754,6 @@ class GradientNoise(object):
         self.noise_func = noise_func
 
     def __call__(self, rule, param):
-        if cuda.available:
-            kernel = cuda.elementwise(
-                'T noise', 'T g', 'g += noise', 'gradient_noise')
-
         g = param.grad
         xp = cuda.get_array_module(g)
         with cuda.get_device(g) as dev:
@@ -769,6 +761,8 @@ class GradientNoise(object):
             if int(dev) == -1:
                 g += noise
             else:
+                kernel = cuda.elementwise(
+                    'T noise', 'T g', 'g += noise', 'gradient_noise')
                 kernel(noise, g)
 
 

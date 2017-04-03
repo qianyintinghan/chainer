@@ -602,10 +602,10 @@ Actual: {0}'''.format(type(data))
         """Updates the data array using the gradient and the update rule.
 
         This method updates the variable using the update rule attached to this
-        variable. If the gradient is ``None``, it does nothing.
+        variable.
 
         """
-        if self.update_rule is not None and self._grad is not None:
+        if self.update_rule is not None:
             self.update_rule.update(self)
 
     def __lt__(self, other):

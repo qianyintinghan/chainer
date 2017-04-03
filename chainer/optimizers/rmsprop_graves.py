@@ -47,9 +47,11 @@ class RMSpropGravesRule(optimizer.UpdateRule):
             self.state['delta'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         n, g, delta = self.state['n'], self.state['g'], self.state['delta']
         hp = self.hyperparam
-        grad = param.grad
 
         n *= hp.alpha
         n += (1 - hp.alpha) * grad * grad
@@ -60,6 +62,9 @@ class RMSpropGravesRule(optimizer.UpdateRule):
         param.data += delta
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         hp = self.hyperparam
         cuda.elementwise(
             'T grad, T lr, T alpha, T momentum, T eps',
@@ -70,7 +75,7 @@ class RMSpropGravesRule(optimizer.UpdateRule):
                    lr * grad * rsqrt(avg_n - avg_g * avg_g + eps);
                param += delta;''',
             'rmsprop_graves')(
-                param.grad, hp.lr, hp.alpha, hp.momentum, hp.eps, param.data,
+                grad, hp.lr, hp.alpha, hp.momentum, hp.eps, param.data,
                 self.state['n'], self.state['g'], self.state['delta'])
 
 

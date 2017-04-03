@@ -33,15 +33,21 @@ class NesterovAGRule(optimizer.UpdateRule):
             self.state['v'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         v = self.state['v']
         lr, momentum = self.hyperparam.lr, self.hyperparam.momentum
 
         v *= momentum
-        v -= lr * param.grad
+        v -= lr * grad
         param.data += momentum * momentum * v
-        param.data -= (1 + momentum) * lr * param.grad
+        param.data -= (1 + momentum) * lr * grad
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T lr, T momentum',
             'T param, T v',
@@ -50,7 +56,7 @@ class NesterovAGRule(optimizer.UpdateRule):
                param += momentum * momentum * v - (1 + momentum) * lr * grad;
             ''',
             'nesterov_ag')(
-                param.grad, self.hyperparam.lr, self.hyperparam.momentum,
+                grad, self.hyperparam.lr, self.hyperparam.momentum,
                 param.data, self.state['v'])
 
 

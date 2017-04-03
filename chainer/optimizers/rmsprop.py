@@ -39,21 +39,26 @@ class RMSpropRule(optimizer.UpdateRule):
             self.state['ms'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         hp = self.hyperparam
         ms = self.state['ms']
-        grad = param.grad
 
         ms *= hp.alpha
         ms += (1 - hp.alpha) * grad * grad
         param.data -= hp.lr * grad / (numpy.sqrt(ms) + hp.eps)
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T lr, T alpha, T eps',
             'T param, T ms',
             '''ms = alpha * ms + (1 - alpha) * grad * grad;
                param -= lr * grad / (sqrt(ms) + eps);''',
-            'rmsprop')(param.grad, self.hyperparam.lr, self.hyperparam.alpha,
+            'rmsprop')(grad, self.hyperparam.lr, self.hyperparam.alpha,
                        self.hyperparam.eps, param.data, self.state['ms'])
 
 

@@ -33,19 +33,25 @@ class MomentumSGDRule(optimizer.UpdateRule):
             self.state['v'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         v = self.state['v']
         v *= self.hyperparam.momentum
-        v -= self.hyperparam.lr * param.grad
+        v -= self.hyperparam.lr * grad
         param.data += v
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T lr, T momentum',
             'T param, T v',
             '''v = momentum * v - lr * grad;
                param += v;''',
             'momentum_sgd')(
-                param.grad, self.hyperparam.lr, self.hyperparam.momentum,
+                grad, self.hyperparam.lr, self.hyperparam.momentum,
                 param.data, self.state['v'])
 
 

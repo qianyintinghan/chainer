@@ -37,8 +37,10 @@ class SMORMS3Rule(optimizer.UpdateRule):
             self.state['g2'] = xp.zeros_like(param.data)
 
     def update_core_cpu(self, param):
-        mem, g, g2 = self.state['mem'], self.state['g'], self.state['g2']
         grad = param.grad
+        if grad is None:
+            return
+        mem, g, g2 = self.state['mem'], self.state['g'], self.state['g2']
 
         r = 1 / (mem + 1)
         g = (1 - r) * g + r * grad
@@ -51,6 +53,9 @@ class SMORMS3Rule(optimizer.UpdateRule):
         self.state['mem'], self.state['g'], self.state['g2'] = mem, g, g2
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise(
             'T grad, T lr, T eps',
             'T param, T mem, T g, T g2',
@@ -62,7 +67,7 @@ class SMORMS3Rule(optimizer.UpdateRule):
                param -= grad * min(lr, x) / (sqrt(g2) + eps);
                mem = 1 + mem * (1 - x)
                ''',
-            'smorms3')(param.grad, self.hyperparam.lr, self.hyperparam.eps,
+            'smorms3')(grad, self.hyperparam.lr, self.hyperparam.eps,
                        param.data, self.state['mem'], self.state['g'],
                        self.state['g2'])
 

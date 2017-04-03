@@ -24,12 +24,18 @@ class SGDRule(optimizer.UpdateRule):
             self.hyperparam.lr = lr
 
     def update_core_cpu(self, param):
-        param.data -= self.hyperparam.lr * param.grad
+        grad = param.grad
+        if grad is None:
+            return
+        param.data -= self.hyperparam.lr * grad
 
     def update_core_gpu(self, param):
+        grad = param.grad
+        if grad is None:
+            return
         cuda.elementwise('T grad, T lr', 'T param',
                          'param -= lr * grad',
-                         'sgd')(param.grad, self.hyperparam.lr, param.data)
+                         'sgd')(grad, self.hyperparam.lr, param.data)
 
 
 class SGD(optimizer.GradientMethod):
