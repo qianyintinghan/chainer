@@ -18,13 +18,16 @@ class RMSpropRule(optimizer.UpdateRule):
     hyperparameters.
 
     Args:
+        parent_hyperparam (~chainer.Hyperparameter): Hyperparameter that 
+            provides the default values.
         lr (float): Learning rate.
         alpha (float): Exponential decay rate of the second order moment.
         eps (float): Small value for the numerical stability.
 
     """
-    def __init__(self, lr=None, alpha=None, eps=None):
-        super(RMSpropRule, self).__init__()
+    def __init__(self, parent_hyperparam=None, lr=None, alpha=None, eps=None):
+        super(RMSpropRule, self).__init__(
+            parent_hyperparam or _default_hyperparam)
         self.hyperparam.set_parent(_default_hyperparam)
         if lr is not None:
             self.hyperparam.lr = lr
@@ -83,4 +86,4 @@ class RMSprop(optimizer.GradientMethod):
         self.hyperparam.eps = eps
 
     def create_update_rule(self):
-        return RMSpropRule()
+        return RMSpropRule(self.hyperparam)

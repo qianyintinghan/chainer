@@ -113,6 +113,10 @@ class UpdateRule(object):
     the first update. The values of the state dictionary are automatically
     copied to the appropriate device before the update based on the data and
     grad arrays.
+    
+    Args:
+        parent_hyperparam (Hyperparameter): Hyperparameter that provides the
+            default values.
 
     Attributes:
         enabled (bool): Flag to configure if this update rule is active. If the
@@ -122,11 +126,11 @@ class UpdateRule(object):
         t (int): Number of updates made by this update rule.
 
     """
-    def __init__(self):
+    def __init__(self, parent_hyperparam=None):
         self._hooks = collections.OrderedDict()
         self._state = None
         self.enabled = True
-        self.hyperparam = Hyperparameter()
+        self.hyperparam = Hyperparameter(parent_hyperparam)
         self.t = 0
 
     @property
@@ -551,9 +555,7 @@ class GradientMethod(Optimizer):
     def setup(self, link):
         super(GradientMethod, self).setup(link)
         for param in link.params():
-            rule = self.create_update_rule()
-            rule.hyperparam.set_parent(self.hyperparam)
-            param.update_rule = rule
+            param.update_rule = self.create_update_rule()
 
     def update(self, lossfun=None, *args, **kwds):
         """Updates parameters based on a loss function or computed gradients.

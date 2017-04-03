@@ -14,12 +14,14 @@ class SGDRule(optimizer.UpdateRule):
     hyperparameters.
 
     Args:
+        parent_hyperparam (~chainer.Hyperparameter): Hyperparameter that 
+            provides the default values.
         lr (float): Learning rate.
 
     """
-    def __init__(self, lr=None):
-        super(SGDRule, self).__init__()
-        self.hyperparam.set_parent(_default_hyperparam)
+    def __init__(self, parent_hyperparam=None, lr=None):
+        super(SGDRule, self).__init__(
+            parent_hyperparam or _default_hyperparam)
         if lr is not None:
             self.hyperparam.lr = lr
 
@@ -51,4 +53,4 @@ class SGD(optimizer.GradientMethod):
         self.hyperparam.lr = lr
 
     def create_update_rule(self):
-        return SGDRule()
+        return SGDRule(self.hyperparam)

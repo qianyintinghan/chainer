@@ -17,13 +17,15 @@ class AdaGradRule(optimizer.UpdateRule):
     hyperparameters.
 
     Args:
+        parent_hyperparam (~chainer.Hyperparameter): Hyperparameter that 
+            provides the default values.
         lr (float): Learning rate.
         eps (float): Small value for the numerical stability.
 
     """
-    def __init__(self, lr=None, eps=None):
-        super(AdaGradRule, self).__init__()
-        self.hyperparam.set_parent(_default_hyperparam)
+    def __init__(self, parent_hyperparam=None, lr=None, eps=None):
+        super(AdaGradRule, self).__init__(
+            parent_hyperparam or _default_hyperparam)
         if lr is not None:
             self.hyperparam.lr = lr
         if eps is not None:
@@ -76,4 +78,4 @@ class AdaGrad(optimizer.GradientMethod):
         self.hyperparam.eps = eps
 
     def create_update_rule(self):
-        return AdaGradRule()
+        return AdaGradRule(self.hyperparam)

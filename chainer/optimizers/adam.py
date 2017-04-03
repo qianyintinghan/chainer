@@ -21,15 +21,18 @@ class AdamRule(optimizer.UpdateRule):
     hyperparameters.
 
     Args:
+        parent_hyperparam (~chainer.Hyperparameter): Hyperparameter that 
+            provides the default values.
         alpha (float): Step size.
         beta1 (float): Exponential decay rate of the first order moment.
         beta2 (float): Exponential decay rate of the second order moment.
         eps (float): Small value for the numerical stability.
 
     """
-    def __init__(self, alpha=None, beta1=None, beta2=None, eps=None):
-        super(AdamRule, self).__init__()
-        self.hyperparam.set_parent(_default_hyperparam)
+    def __init__(self, parent_hyperparam=None,
+                 alpha=None, beta1=None, beta2=None, eps=None):
+        super(AdamRule, self).__init__(
+            parent_hyperparam or _default_hyperparam)
         if alpha is not None:
             self.hyperparam.alpha = alpha
         if beta1 is not None:
@@ -102,4 +105,4 @@ class Adam(optimizer.GradientMethod):
         self.hyperparam.eps = eps
 
     def create_update_rule(self):
-        return AdamRule()
+        return AdamRule(self.hyperparam)
